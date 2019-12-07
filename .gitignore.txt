@@ -1,0 +1,8 @@
+Project32_VS2015/.vs
+Project32_VS2015/Debug
+Project32_VS2015/Project.lst
+Project32_VS2015/Project.sdf
+Project32_VS2015/Project.sln
+Project32_VS2015/Project.v12
+Project32_VS2015/Project.vcxproj
+Project32_VS2015/Project.vcxproj.user
