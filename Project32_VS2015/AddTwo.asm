@@ -1,6 +1,8 @@
 INCLUDE Irvine32.inc
 .data
 
+
+
 levelCounter dword 0       ; This variable holds the level of the game
 wrongAttemptCounter dword  0
 ecxStorage dword 0
@@ -10,22 +12,37 @@ gameOverString byte "Game Over",0
 ecxa byte "ecx:",0
 
 ; Declaration of words for Levels
-level1_Hint byte "It's a name of an INSECT",0
-level1_Word byte "bee",0
+arrayLength dword ?
+
+level1_Hint byte "Name of Animal::",0
+level1_Word byte "zebra",0
 ptr_word1 dword offset level1_Word
+level1_output byte "*****",0
+output1_ptr dword level1_output
 
 level2_Hint byte "It' a name of a MAMMAL",0
 level2_Word byte "bear",0
 ptr_word2 dword offset level2_Word
+level2_output byte "****",0
+output2_ptr dword level2_output
 
 level3_Hint byte "A symbol of WISDOM",0
 level3_Word byte "owl",0
+ptr_word3 dword offset level3_Word
+level3_output byte "***",0
+output3_ptr dword level3_output
 
 level4_Hint byte "A symbol of PEACE",0
 level4_Word byte "dove",0
+ptr_word4 dword offset level4_Word
+level4_output byte "****",0
+output4_ptr dword level4_output
 
 level5_Hint byte "A name of ANIMAL",0
 level5_Word byte "hyena",0
+ptr_word5 dword offset level5_Word
+level5_output byte "*****",0
+output5_ptr dword level5_output
 
 level6_Hint byte "A CITY of PAKISTAN",0
 level6_Word byte "kohat",0
@@ -40,22 +57,25 @@ level9_Hint byte "An International brand of food",0
 level9_Word byte "popeyes",0
 
 level10_Hint byte "A name of the football club",0
-level10_Word byte "juventus",0
+level10_Word byte "zebra",0
 ptr_word10 dword level10_Word
-level10_output byte "********",0
+level10_output byte "*****",0
 output10_ptr dword level10_output
 index dword 0
 test1 byte ?
 
 .code
-wordChecker proto, word2:dword
+wordChecker proto, word2:dword, word3:dword, lengthOfWord:dword
 compareChar proto, char1:byte, char2:byte
-compareCharToWord proto, word1:dword
+compareCharToWord proto, word1:dword, numberOfLetters:dword
 
 
 
 main PROC
-invoke wordChecker, ptr_word10
+mov eax,lengthof level4_word
+sub eax,1
+mov arrayLength,eax
+invoke wordChecker, ptr_word4, output4_ptr,arrayLength
 mov eax,gameOverBool
 call writeint
 mov eax,gameOverBool
@@ -71,23 +91,21 @@ main ENDP
 
 
 
-wordChecker PROC, word2:dword
+wordChecker PROC, word2:dword, word3:dword, lengthOfWord:dword
 pushad
-mov ecx,8
+mov ecx,lengthOfWord
 WCloop:
 	mov ecxStorage,ecx
-	invoke compareCharToWord ,word2
-	;mov eax,index
-	;call writeint
+	invoke compareCharToWord ,word2,lengthOfWord
 	mov edx,index
-	cmp edx,8
+	cmp edx,lengthOfWord
 	jge next
 	mov dl,test1
-	mov esi, output10_ptr
+	mov esi, word3
 	add esi,index
 	mov [esi],dl
 	call crlf
-	mov edx,offset level10_output
+	mov edx,word3
 	call writestring
 
 next:
@@ -96,8 +114,6 @@ next:
 	je WCnextIteration
 	inc wrongAttemptCounter
 	add ecx,1
-	;mov eax,wrongAttemptCounter
-	;call writeint
 	mov ebx,wrongAttemptCounter
 	cmp ebx,5
 	je GameOver
@@ -113,9 +129,9 @@ wordChecker ENDP
 
 
 
-compareCharToWord PROC uses edx, word1:dword
+compareCharToWord PROC uses edx, word1:dword, numberOfLetters:dword
 mov esi,word1
-mov ecx,8
+mov ecx,numberOfLetters
 mov index,0
 call readchar
 mov Test1,al
