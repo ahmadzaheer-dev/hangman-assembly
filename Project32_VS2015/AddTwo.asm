@@ -42,6 +42,9 @@ level9_Word byte "popeyes",0
 level10_Hint byte "A name of the football club",0
 level10_Word byte "juventus",0
 ptr_word10 dword level10_Word
+level10_output byte "********",0
+output10_ptr dword level10_output
+index dword 0
 test1 byte ?
 
 .code
@@ -63,38 +66,48 @@ call writeint
 jump:
 mov edx,offset gameOverString
 call writestring
-
-call readint
+jmp EndProgram
 main ENDP
 
 
 
 wordChecker PROC, word2:dword
+pushad
 mov ecx,8
 WCloop:
 	mov ecxStorage,ecx
 	invoke compareCharToWord ,word2
-	mov ecx, ecxStorage
-	mov edx, offset ecxa
+	;mov eax,index
+	;call writeint
+	mov edx,index
+	cmp edx,8
+	jge next
+	mov dl,test1
+	mov esi, output10_ptr
+	add esi,index
+	mov [esi],dl
+	call crlf
+	mov edx,offset level10_output
 	call writestring
-	mov eax,ecx
-	call writeint
+
+next:
+	mov ecx, ecxStorage
 	cmp ebx,1
 	je WCnextIteration
 	inc wrongAttemptCounter
 	add ecx,1
-	mov eax,wrongAttemptCounter
-	call writeint
+	;mov eax,wrongAttemptCounter
+	;call writeint
 	mov ebx,wrongAttemptCounter
 	cmp ebx,5
-	je GO
+	je GameOver
 	WCnextIteration:
 	loop WCloop
 	jmp WCReturn
-GO:
+GameOver:
 mov gameOverBool,1
 WCReturn:
-mov ecx,0
+popad
 ret
 wordChecker ENDP
 
@@ -103,14 +116,15 @@ wordChecker ENDP
 compareCharToWord PROC uses edx, word1:dword
 mov esi,word1
 mov ecx,8
+mov index,0
 call readchar
 mov Test1,al
-call writechar
 CCTWloop:
 	invoke compareChar ,test1, [esi]
 	cmp edx,1
 	je return
 	inc esi
+	inc index
 	loop CCTWloop
 return:
 	mov ebx,edx
@@ -130,9 +144,9 @@ compareChar PROC uses eax ,char1:byte, char2:byte
 		ret
 compareChar ENDP
 
-
-
+EndProgram:
 END main
+
 
 
 
