@@ -9,6 +9,9 @@ ecxStorage dword 0
 gameOverBool dword 0
 gameOverString byte "Game Over",0
 mainController dword ?
+right byte "Right Alphabet",0
+wrong byte "Wrong Alphabet",0
+lifeString byte "Remaining lives: ",0
 
 chooseOptionString byte "Select from the option given below",0
 startGameString byte "1 - Start Game",0
@@ -22,31 +25,31 @@ enterOptionString byte "Enter the number of the option: ",0
 ; Declaration of words for Levels
 arrayLength dword ?
 
-level1_Hint byte "Name of Animal::",0
+level1_Hint byte "Name of Animal that has Stripes :",0
 level1_Word byte "zebra",0
 ptr_word1 dword offset level1_Word
 level1_output byte "*****",0
 output1_ptr dword level1_output
 
-level2_Hint byte "It' a name of a MAMMAL",0
+level2_Hint byte "It' a name of a MAMMAL that is omnivors: ",0
 level2_Word byte "bear",0
 ptr_word2 dword offset level2_Word
 level2_output byte "****",0
 output2_ptr dword level2_output
 
-level3_Hint byte "A symbol of WISDOM",0
+level3_Hint byte "A symbol of WISDOM in western culture: ",0
 level3_Word byte "owl",0
 ptr_word3 dword offset level3_Word
 level3_output byte "***",0
 output3_ptr dword level3_output
 
-level4_Hint byte "A symbol of PEACE",0
+level4_Hint byte "A bird that is symbol of PEACE: ",0
 level4_Word byte "dove",0
 ptr_word4 dword offset level4_Word
 level4_output byte "****",0
 output4_ptr dword level4_output
 
-level5_Hint byte "A name of ANIMAL",0
+level5_Hint byte "A name of ANIMAL that is cunning: ",0
 level5_Word byte "hyena",0
 ptr_word5 dword offset level5_Word
 level5_output byte "*****",0
@@ -54,14 +57,14 @@ output5_ptr dword level5_output
 
 index dword 0
 charIn byte ?
+temp byte ?
 
 .code
+
 wordChecker proto, word2:dword, word3:dword, lengthOfWord:dword
 compareChar proto, char1:byte, char2:byte
 compareCharToWord proto, word1:dword, numberOfLetters:dword
 restoreString proto, estericString:dword, lengthOfWord:dword
-
-
 
 main PROC
 
@@ -100,11 +103,6 @@ jmp EndProgram
 
 
 
-
-
-
-
-
 levelCompare:
 	cmp eax,1
 	je level1
@@ -121,6 +119,16 @@ level1:
 mov eax,lengthof level1_word
 sub eax,1
 mov arrayLength,eax
+mov  dh,1
+mov dl,1
+call gotoxy
+mov edx, offset level1_Hint
+call writestring
+mov  dh,3
+mov dl,1
+call gotoxy
+mov edx,offset level1_output
+call writestring
 invoke wordChecker, ptr_word1, output1_ptr,arrayLength
 invoke restoreString, output1_ptr, arrayLength
 jmp menuLoop
@@ -129,28 +137,72 @@ level2:
 mov eax,lengthof level2_word
 sub eax,1
 mov arrayLength,eax
+mov  dh,1
+mov dl,1
+call gotoxy
+mov edx, offset level2_Hint
+call writestring
+mov  dh,2
+mov dl,1
+call gotoxy
+mov edx,offset level2_output
+call writestring
 invoke wordChecker, ptr_word2, output2_ptr,arrayLength
+invoke restoreString, output2_ptr, arrayLength
 jmp menuLoop
 
 level3:
 mov eax,lengthof level3_word
 sub eax,1
 mov arrayLength,eax
+mov  dh,1
+mov dl,1
+call gotoxy
+mov edx, offset level3_Hint
+call writestring
+mov  dh,2
+mov dl,1
+call gotoxy
+mov edx,offset level3_output
+call writestring
 invoke wordChecker, ptr_word3, output3_ptr,arrayLength
+invoke restoreString, output3_ptr, arrayLength
 jmp menuLoop
 
 level4:
 mov eax,lengthof level4_word
 sub eax,1
 mov arrayLength,eax
+mov  dh,1
+mov dl,1
+call gotoxy
+mov edx, offset level4_Hint
+call writestring
+mov  dh,2
+mov dl,1
+call gotoxy
+mov edx,offset level4_output
+call writestring
 invoke wordChecker, ptr_word4, output4_ptr,arrayLength
+invoke restoreString, output4_ptr, arrayLength
 jmp menuLoop
 
 level5:
 mov eax,lengthof level5_word
 sub eax,1
 mov arrayLength,eax
+mov  dh,1
+mov dl,1
+call gotoxy
+mov edx, offset level5_Hint
+call writestring
+mov  dh,2
+mov dl,1
+call gotoxy
+mov edx,offset level5_output
+call writestring
 invoke wordChecker, ptr_word5, output5_ptr,arrayLength
+invoke restoreString, output5_ptr, arrayLength
 jmp menuLoop
 
 main ENDP
@@ -159,8 +211,12 @@ main ENDP
 
 wordChecker PROC uses ecx, word2:dword, word3:dword, lengthOfWord:dword
 pushad
+mov wrongAttemptCounter,0
+mov gameOverBool,0
 mov ecx,lengthOfWord
+mov temp,4
 WCloop:
+	call printAttempt
 	mov ecxStorage,ecx
 	invoke compareCharToWord ,word2,lengthOfWord
 	mov edx,index
@@ -170,29 +226,38 @@ WCloop:
 	mov esi, word3
 	add esi,index
 	mov [esi],dl
-	call clrscr
-	mov  dh,1
-	mov dl,55
+	mov  dh,temp
+	mov dl,1
 	call gotoxy
 	mov edx,word3
 	call writestring
-	
-
+	add temp,1
 next:
 	mov ecx, ecxStorage
 	cmp ebx,1
-	je WCnextIteration
+	je equal
 	inc wrongAttemptCounter
 	add ecx,1
+	call wrongPrint
 	mov ebx,wrongAttemptCounter
+
 	cmp ebx,5
 	je GameOver
+	jmp WCnextIteration
+	equal:
+	call rightPrint
 	WCnextIteration:
 	loop WCloop
 	jmp WCReturn
 GameOver:
 mov gameOverBool,1
+call printGameOver
+
+
 WCReturn:
+call crlf
+call waitmsg
+call clrscr
 popad
 ret
 wordChecker ENDP
@@ -203,8 +268,8 @@ compareCharToWord PROC uses edx, word1:dword, numberOfLetters:dword
 mov esi,word1
 mov ecx,numberOfLetters
 mov index,0
-mov  dh,1
-mov dl,55
+mov  dh,temp
+mov dl,1
 call gotoxy
 call readchar
 mov charIn,al
@@ -273,8 +338,6 @@ printMenu ENDP
 restoreString PROC , estericString:dword, lengthOfWord:dword
 pushad
 mov ecx,lengthofWord
-mov eax,lengthofWord
-call writeint
 mov index,0
 restoreLoop:
 	mov edx,index
@@ -292,9 +355,54 @@ ret
 restoreString ENDP
 
 
-centerCursor PROC
+rightPrint PROC
+pushad
+mov dh,15
+mov dl,1
+call gotoxy
+mov edx,offset right
+call writestring
+popad
+ret
+rightPrint ENDP
 
-centerCursor ENDP
+wrongPrint PROC
+pushad
+mov dh,15
+mov dl,1
+call gotoxy
+mov edx,offset wrong
+call writestring
+popad
+ret
+wrongPrint ENDP
+
+printAttempt PROC
+pushad
+mov dh,14
+mov dl,1
+call gotoxy
+mov edx,offset lifeString
+call writestring
+mov eax, 5
+sub eax, wrongAttemptCounter
+call writeint
+popad
+ret
+printAttempt ENDP
+
+
+
+printGameOver PROC
+pushad
+mov dh,16
+mov dl,1
+call gotoxy
+mov edx,offset gameOverString
+call writestring
+popad
+ret
+printGameOver ENDP
 
 EndProgram:
 END main
