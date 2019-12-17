@@ -3,13 +3,21 @@ INCLUDE Irvine32.inc
 
 
 
-levelCounter dword 0       ; This variable holds the level of the game
+levelCounter dword 1       ; This variable holds the level of the game
 wrongAttemptCounter dword  0
 ecxStorage dword 0
 gameOverBool dword 0
 gameOverString byte "Game Over",0
+mainController dword ?
 
-ecxa byte "ecx:",0
+chooseOptionString byte "Select from the option given below",0
+startGameString byte "1 - Start Game",0
+playNextString byte "2 - Next Level",0
+playPreviousString byte "3 - Previous Level",0
+exitGameString byte "4 - Exit Game",0
+enterOptionString byte "Enter the number of the option: ",0
+
+
 
 ; Declaration of words for Levels
 arrayLength dword ?
@@ -44,54 +52,112 @@ ptr_word5 dword offset level5_Word
 level5_output byte "*****",0
 output5_ptr dword level5_output
 
-level6_Hint byte "A CITY of PAKISTAN",0
-level6_Word byte "kohat",0
-
-level7_Hint byte "A famous food of Afghanistan",0
-level7_Word byte "kabulipulao",0
-
-level8_Hint byte "A brand of car",0
-level8_Word byte "alfaromeo",0
-
-level9_Hint byte "An International brand of food",0
-level9_Word byte "popeyes",0
-
-level10_Hint byte "A name of the football club",0
-level10_Word byte "zebra",0
-ptr_word10 dword level10_Word
-level10_output byte "*****",0
-output10_ptr dword level10_output
 index dword 0
-test1 byte ?
+charIn byte ?
 
 .code
 wordChecker proto, word2:dword, word3:dword, lengthOfWord:dword
 compareChar proto, char1:byte, char2:byte
 compareCharToWord proto, word1:dword, numberOfLetters:dword
+restoreString proto, estericString:dword, lengthOfWord:dword
 
 
 
 main PROC
+
+menuLoop:
+call printMenu
+call readint
+call clrscr
+mov mainController,eax
+cmp eax,1
+je startGamelabel
+cmp eax,2
+je nextLevelLabel
+cmp eax,3
+je previousLevelLabel
+cmp eax,4
+je endGameLabel
+
+
+
+startGameLabel:
+	mov levelCounter,1
+	mov eax,levelCounter
+	jmp levelCompare 
+
+nextLevelLabel:
+	inc levelCounter
+	mov eax,levelCounter
+	jmp levelCompare
+
+previousLevelLabel:
+	mov eax,levelCounter
+	jmp levelCompare
+
+endGameLabel:
+jmp EndProgram
+
+
+
+
+
+
+
+
+levelCompare:
+	cmp eax,1
+	je level1
+	cmp eax,2
+	je level2
+	cmp eax,3
+	je level3
+	cmp eax,4
+	je level4
+	cmp eax,5
+	je level5
+
+level1:
+mov eax,lengthof level1_word
+sub eax,1
+mov arrayLength,eax
+invoke wordChecker, ptr_word1, output1_ptr,arrayLength
+invoke restoreString, output1_ptr, arrayLength
+jmp menuLoop
+
+level2:
+mov eax,lengthof level2_word
+sub eax,1
+mov arrayLength,eax
+invoke wordChecker, ptr_word2, output2_ptr,arrayLength
+jmp menuLoop
+
+level3:
+mov eax,lengthof level3_word
+sub eax,1
+mov arrayLength,eax
+invoke wordChecker, ptr_word3, output3_ptr,arrayLength
+jmp menuLoop
+
+level4:
 mov eax,lengthof level4_word
 sub eax,1
 mov arrayLength,eax
 invoke wordChecker, ptr_word4, output4_ptr,arrayLength
-mov eax,gameOverBool
-call writeint
-mov eax,gameOverBool
-cmp eax,1
-je jump
-mov eax,wrongAttemptCounter
-call writeint
-jump:
-mov edx,offset gameOverString
-call writestring
-jmp EndProgram
+jmp menuLoop
+
+level5:
+mov eax,lengthof level5_word
+sub eax,1
+mov arrayLength,eax
+invoke wordChecker, ptr_word5, output5_ptr,arrayLength
+jmp menuLoop
+
 main ENDP
 
 
 
-wordChecker PROC, word2:dword, word3:dword, lengthOfWord:dword
+wordChecker PROC uses ecx, word2:dword, word3:dword, lengthOfWord:dword
 pushad
 mov ecx,lengthOfWord
 WCloop:
@@ -100,13 +166,17 @@ WCloop:
 	mov edx,index
 	cmp edx,lengthOfWord
 	jge next
-	mov dl,test1
+	mov dl,charIn
 	mov esi, word3
 	add esi,index
 	mov [esi],dl
-	call crlf
+	call clrscr
+	mov  dh,1
+	mov dl,55
+	call gotoxy
 	mov edx,word3
 	call writestring
+	
 
 next:
 	mov ecx, ecxStorage
@@ -133,10 +203,13 @@ compareCharToWord PROC uses edx, word1:dword, numberOfLetters:dword
 mov esi,word1
 mov ecx,numberOfLetters
 mov index,0
+mov  dh,1
+mov dl,55
+call gotoxy
 call readchar
-mov Test1,al
+mov charIn,al
 CCTWloop:
-	invoke compareChar ,test1, [esi]
+	invoke compareChar ,charIn, [esi]
 	cmp edx,1
 	je return
 	inc esi
@@ -159,6 +232,69 @@ compareChar PROC uses eax ,char1:byte, char2:byte
 	eax1:
 		ret
 compareChar ENDP
+
+
+
+printMenu PROC uses edx
+	mov  dh,10
+	mov dl,40
+	call gotoxy
+	mov edx, offset chooseOptionString
+	call writestring
+	mov  dh,11
+	mov dl,40
+	call gotoxy
+	mov edx, offset startGameString
+	call writestring
+	mov  dh,12
+	mov dl,40
+	call gotoxy
+	mov edx, offset playNextString
+	call writestring
+	mov  dh,13
+	mov dl,40
+	call gotoxy
+	mov edx, offset playPreviousString
+	call writestring
+	mov  dh,14
+	mov dl,40
+	call gotoxy
+	mov edx, offset exitGameString
+	call writestring
+	mov  dh,15
+	mov dl,40
+	call gotoxy
+	mov edx, offset enterOptionString
+	call writestring
+	ret
+printMenu ENDP
+
+
+restoreString PROC , estericString:dword, lengthOfWord:dword
+pushad
+mov ecx,lengthofWord
+mov eax,lengthofWord
+call writeint
+mov index,0
+restoreLoop:
+	mov edx,index
+	cmp edx,lengthOfWord
+	jge restoreReturn
+	mov dl,'*'
+	mov esi, estericString
+	add esi,index
+	mov [esi],dl
+	inc index
+	loop restoreLoop
+restoreReturn:
+popad
+ret
+restoreString ENDP
+
+
+centerCursor PROC
+
+centerCursor ENDP
 
 EndProgram:
 END main
